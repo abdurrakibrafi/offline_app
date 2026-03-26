@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/database/app_database.dart';
 import '../../core/network/api_client.dart';
@@ -19,22 +20,25 @@ class FormSendingController {
   }) async {
     final id = const Uuid().v4();
 
-    await LocalDb.insert({
-      'id': id,
-      'name': name,
-      'phone': phone,
-      'email': email,
-      'created_at': DateTime.now().toIso8601String(),
-      'is_uploaded': 0,
-    });
-
     if (_connectivity.isOnline) {
-      await _post(id, name: name, phone: phone, email: email);
+      // Online — আগে API, success হলে local save
+      await _postAndSave(id: id, name: name, phone: phone, email: email);
+    } else {
+      // Offline — temp local save, net আসলে upload হবে
+      await LocalDb.insert({
+        'id': id,
+        'name': name,
+        'phone': phone,
+        'email': email,
+        'created_at': DateTime.now().toIso8601String(),
+        'is_uploaded': 0,
+      });
     }
   }
 
-  Future<void> _post(
-    String id, {
+  // Online submit — API success হলেই local save
+  Future<void> _postAndSave({
+    required String id,
     required String name,
     required String phone,
     required String email,
@@ -44,26 +48,48 @@ class FormSendingController {
         '/sos',
         body: {"name": name, "phone": phone, "email": email},
       );
-      await LocalDb.markUploaded(id);
-    } catch (e) {
-      print('Failed: $e');
+
+      // API success — local এ save করো
+      await LocalDb.insert({
+        'id': id,
+        'name': name,
+        'phone': phone,
+        'email': email,
+        'created_at': DateTime.now().toIso8601String(),
+        'is_uploaded': 1,
+      });
+
+      print('Success → local saved');
+    } on DioException {
+      // API fail — local এ save হবে না
+      print('API failed → not saved');
+      rethrow; // FormScreen এ snackbar দেখাবে
     }
   }
 
+  // Offline pending গুলো net আসলে upload
   Future<void> _uploadPending() async {
     final pending = await LocalDb.getPending();
+    print('Pending: ${pending.length}');
+
     for (final row in pending) {
-      await _post(
-        row['id'] as String,
-        name: row['name'] as String,
-        phone: row['phone'] as String,
-        email: row['email'] as String,
-      );
+      try {
+        await ApiClient.post(
+          '/sos',
+          body: {
+            "name": row['name'],
+            "phone": row['phone'],
+            "email": row['email'],
+          },
+        );
+
+        // success হলে mark করো
+        await LocalDb.markUploaded(row['id'] as String);
+        print('Uploaded: ${row['id']}');
+      } on DioException {
+        // fail হলে পরেরটায় যাও, পরে retry হবে
+        print('Failed: ${row['id']}');
+      }
     }
   }
-
-  // Future<List> getAll() async {
-  //   final res = await ApiClient.get('/contacts');
-  //   return res.data;
-  // }
 }

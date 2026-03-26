@@ -47,4 +47,22 @@ class LocalDb {
       whereArgs: [id],
     );
   }
+
+  // এটা যোগ করুন — সব data আনো
+  static Future<List<Map<String, dynamic>>> getAll() async {
+    final db = await instance;
+    return db.query('contacts', orderBy: 'created_at DESC');
+  }
+
+  // এটাও যোগ করুন — একটা delete করো
+  static Future<void> delete(String id) async {
+    final db = await instance;
+    await db.delete('contacts', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // এটাও যোগ করুন — সব clear করো
+  static Future<void> clearAll() async {
+    final db = await instance;
+    await db.delete('contacts');
+  }
 }

@@ -1,38 +1,39 @@
 import 'package:flutter/material.dart';
 
+import 'core/network/connectivity_service.dart';
+import 'featuers/controller/form_sending_controller.dart';
 import 'featuers/form_view.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+// Global key — যেকোনো জায়গা থেকে snackbar দেখাবে
+final GlobalKey<ScaffoldMessengerState> snackbarKey =
+GlobalKey<ScaffoldMessengerState>();
 
-class MyApp extends StatelessWidget {
-
-  const MyApp({super.key});
-
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final connectivity = ConnectivityService();
-  final dio = Dio(BaseOptions(
-    baseUrl: 'https://your-api.com',  // আপনার base URL
-    headers: {'Content-Type': 'application/json'},
-  ));
-  final repo = ContactRepository(connectivity, dio);
+  final repo = FormSendingController(connectivity);
 
   await connectivity.checkNow();
 
+  runApp(MyApp(repo: repo, connectivity: connectivity));
+}
 
-  // This widget is the root of your application.
+class MyApp extends StatelessWidget {
+  final FormSendingController repo;
+  final ConnectivityService connectivity;
+
+  const MyApp({super.key, required this.repo, required this.connectivity});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      scaffoldMessengerKey: snackbarKey, // এখানে attach করুন
       theme: ThemeData(
-
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: FormScreen(repo: null, connectivity: null,),
+      home: FormScreen(repo: repo, connectivity: connectivity),
     );
   }
 }
-
