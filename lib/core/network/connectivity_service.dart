@@ -1,25 +1,42 @@
-// lib/core/network/connectivity_service.dart
 import 'dart:async';
-
-import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class ConnectivityService {
+  final _connectivity = Connectivity();
   final _controller = StreamController<bool>.broadcast();
 
-  Stream<bool> get onStatusChange => _controller.stream;
+  Stream<bool> get onChanged => _controller.stream;
   bool _isOnline = false;
   bool get isOnline => _isOnline;
 
   ConnectivityService() {
-    InternetConnection().onStatusChange.listen((status) {
-      _isOnline = status == InternetStatus.connected;
+    _connectivity.onConnectivityChanged.listen((
+      List<ConnectivityResult> results,
+    ) {
+      final wasOnline = _isOnline;
+      _isOnline = _checkResults(results);
       _controller.add(_isOnline);
+
+      if (!wasOnline && _isOnline) {
+        print('Internet connected!');
+      }
     });
   }
 
   Future<bool> checkNow() async {
-    _isOnline = await InternetConnection().hasInternetAccess;
+    final results = await _connectivity.checkConnectivity();
+    _isOnline = _checkResults(results);
     return _isOnline;
+  }
+
+  // List<ConnectivityResult> handle করো
+  bool _checkResults(List<ConnectivityResult> results) {
+    return results.any(
+      (r) =>
+          r == ConnectivityResult.mobile ||
+          r == ConnectivityResult.wifi ||
+          r == ConnectivityResult.ethernet,
+    );
   }
 
   void dispose() => _controller.close();
