@@ -68,9 +68,12 @@ class FormSendingController {
   }
 
   // Offline pending গুলো net আসলে upload
+// Net আসলে — সবগুলো একে একে upload
   Future<void> _uploadPending() async {
     final pending = await LocalDb.getPending();
-    print('Pending: ${pending.length}');
+    if (pending.isEmpty) return;
+
+    print('Pending: ${pending.length} টা upload হবে');
 
     for (final row in pending) {
       try {
@@ -87,7 +90,7 @@ class FormSendingController {
         await LocalDb.markUploaded(row['id'] as String);
         print('Uploaded: ${row['id']}');
       } on DioException {
-        // fail হলে পরেরটায় যাও, পরে retry হবে
+        // এটা fail হলে পরেরটায় যাও
         print('Failed: ${row['id']}');
       }
     }

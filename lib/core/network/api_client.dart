@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../main.dart';
 
 class ApiClient {
-  static const String baseUrl = 'http://134.199.204.218:5005/api/v1';
+  static const String baseUrl = 'http://10.10.10.4:5005/api/v1';
   static String? _accessToken;
 
   static final Dio _dio = _createDio();
@@ -16,7 +16,7 @@ class ApiClient {
         headers: {
           'Content-Type': 'application/json',
           'Authorization':
-              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjM2ZmE4YzY4MmM2YTY4ODUyZDMyMCIsImVtYWlsIjoiYWJkdXJyYWtpYnJhZmk0NjlAZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NzQ1MDI0MDcsImV4cCI6MTc3NTM2NjQwN30.j3YUr98Dl_OPnbAgSV0XJU2DqCo2oydZIrJKOyTzQDQ',
+              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjM2ZmE4YzY4MmM2YTY4ODUyZDMyMCIsImVtYWlsIjoiYWJkdXJyYWtpYnJhZmk0NjlAZ21haWwuY29tIiwicm9sZSI6IlVTRVIiLCJpYXQiOjE3NzQ1MDU3ODksImV4cCI6MTc3NTM2OTc4OX0.n2qCKbdJIi6h1UsvJjepczFg3WoHPT6hJoY1BwSYnC0',
         },
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
